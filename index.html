@@ -40,7 +40,7 @@
     let isNameSet = false;
 
     // Kết nối tới WebSocket server
-    const socket = new WebSocket('ws://localhost:8080');
+    const socket = new WebSocket(`ws://${window.location.host}`);
 
     // Khi kết nối thành công
     socket.addEventListener('open', () => {
@@ -54,20 +54,24 @@
 
       // Nếu server yêu cầu nhập tên
       if (message === 'Vui lòng nhập tên của bạn:') {
-        const name = prompt('Vui lòng nhập tên của bạn:');
-        if (name) {
-          socket.send(name);
-          messageInput.disabled = false;
-          sendBtn.disabled = false;
-        } else {
-          appendMessage('Bạn cần nhập tên để tham gia chat.');
+        let name = '';
+        while (!name) {
+          name = prompt('Vui lòng nhập tên của bạn:').trim();
+          if (!name) {
+            alert('Tên không được để trống!');
+          }
         }
+        socket.send(name);
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
       }
     });
 
     // Khi kết nối bị đóng
     socket.addEventListener('close', () => {
       appendMessage('Đã ngắt kết nối tới server');
+      messageInput.disabled = true;
+      sendBtn.disabled = true;
     });
 
     // Khi có lỗi xảy ra

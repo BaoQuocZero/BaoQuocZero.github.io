@@ -1,4 +1,4 @@
-// server.js (cập nhật)
+// server.js
 const WebSocket = require('ws');
 const http = require('http');
 const fs = require('fs');
@@ -6,8 +6,9 @@ const path = require('path');
 
 // Tạo HTTP server để phục vụ file tĩnh
 const server = http.createServer((req, res) => {
+  // Nếu truy cập vào root hoặc /index.html, phục vụ file index.html
   if (req.url === '/' || req.url === '/index.html') {
-    fs.readFile(path.join(__dirname, 'public', 'index.html'), (err, data) => {
+    fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
       if (err) {
         res.writeHead(500);
         res.end('Lỗi máy chủ');
@@ -17,8 +18,30 @@ const server = http.createServer((req, res) => {
       res.end(data);
     });
   } else {
-    res.writeHead(404);
-    res.end('Không tìm thấy trang');
+    // Xử lý các yêu cầu khác (ví dụ: file CSS, JS, hình ảnh)
+    const filePath = path.join(__dirname, req.url);
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end('Không tìm thấy trang');
+        return;
+      }
+
+      // Xác định loại nội dung dựa trên phần mở rộng file
+      let contentType = 'text/plain';
+      if (req.url.endsWith('.css')) {
+        contentType = 'text/css';
+      } else if (req.url.endsWith('.js')) {
+        contentType = 'application/javascript';
+      } else if (req.url.endsWith('.png')) {
+        contentType = 'image/png';
+      } else if (req.url.endsWith('.jpg') || req.url.endsWith('.jpeg')) {
+        contentType = 'image/jpeg';
+      } // Thêm các loại MIME khác nếu cần
+
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(data);
+    });
   }
 });
 
