@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ứng Dụng Chat WebSocket</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #chat {
+      border: 1px solid #ccc;
+      height: 300px;
+      overflow-y: scroll;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    #messageInput {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #sendBtn {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ứng Dụng Chat WebSocket</h1>
+  <div id="chat"></div>
+  <input type="text" id="messageInput" placeholder="Nhập tin nhắn..." disabled />
+  <button id="sendBtn" disabled>Gửi</button>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let isNameSet = false;
+
+    // Kết nối tới WebSocket server
+    const socket = new WebSocket('ws://localhost:8080');
+
+    // Khi kết nối thành công
+    socket.addEventListener('open', () => {
+      appendMessage('Kết nối tới server thành công!');
+    });
+
+    // Khi nhận được tin nhắn từ server
+    socket.addEventListener('message', (event) => {
+      const message = event.data;
+      appendMessage(message);
+
+      // Nếu server yêu cầu nhập tên
+      if (message === 'Vui lòng nhập tên của bạn:') {
+        const name = prompt('Vui lòng nhập tên của bạn:');
+        if (name) {
+          socket.send(name);
+          messageInput.disabled = false;
+          sendBtn.disabled = false;
+        } else {
+          appendMessage('Bạn cần nhập tên để tham gia chat.');
+        }
+      }
+    });
+
+    // Khi kết nối bị đóng
+    socket.addEventListener('close', () => {
+      appendMessage('Đã ngắt kết nối tới server');
+    });
+
+    // Khi có lỗi xảy ra
+    socket.addEventListener('error', (error) => {
+      console.error('WebSocket lỗi:', error);
+    });
+
+    // Gửi tin nhắn khi nhấn nút "Gửi"
+    sendBtn.addEventListener('click', () => {
+      sendMessage();
+    });
+
+    // Gửi tin nhắn khi nhấn phím Enter
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    // Hàm gửi tin nhắn
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message !== '') {
+        socket.send(message);
+        appendMessage(`Bạn: ${message}`);
+        messageInput.value = '';
+      }
+    }
+
+    // Hàm thêm tin nhắn vào giao diện chat
+    function appendMessage(message) {
+      const messageElement = document.createElement('div');
+      messageElement.textContent = message;
+      chat.appendChild(messageElement);
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+</body>
+</html>
